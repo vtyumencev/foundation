@@ -1,0 +1,9 @@
+.env
+
+.idea/*
+
+www/*
+!www/.gitkeep
+
+misc/*
+!misc/.gitkeep

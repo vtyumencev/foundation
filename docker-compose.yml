@@ -1,0 +1,29 @@
+services:
+  web-server:
+    container_name: ${PROJECT_NAME}-php-apache
+    build:
+      context: ./docker/web-server
+      dockerfile: Dockerfile
+    volumes:
+      - ./www:/var/www/html/
+      - ./docker/web-server/vhosts:/etc/apache2/sites-enabled
+    ports:
+      - "80:80"
+      - "443:443"
+  db:
+    container_name: ${PROJECT_NAME}-db
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "9906:3306"
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - "1025:1025" # smtp server
+      - "8025:8025" # web ui
