@@ -4,6 +4,9 @@ services:
     build:
       context: ./docker/web-server
       dockerfile: Dockerfile
+      args:
+        PROJECT_PHP_VERSION: ${PROJECT_PHP_VERSION}
+        USER_NAME: ${USER_NAME}
     volumes:
       - ./www:/var/www/html/
       - ./docker/web-server/vhosts:/etc/apache2/sites-enabled

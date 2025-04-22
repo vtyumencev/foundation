@@ -1,3 +1,4 @@
+ARG PROJECT_PHP_VERSION=8.3
 FROM php:${PROJECT_PHP_VERSION}-apache
 RUN a2enmod rewrite
 RUN apt-get update && apt-get upgrade -y
@@ -31,5 +32,11 @@ RUN chmod +x wp-cli.phar && \
 
 COPY ./php.ini /usr/local/etc/php/conf.d/custom-php.ini
 
-RUN useradd -ms /bin/bash ${PROJECT_USER_NAME}
-USER ${PROJECT_USER_NAME}
+# Install Node.js and Yarn
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g yarn
+
+ARG USER_NAME=root
+RUN useradd -ms /bin/bash ${USER_NAME}
+USER ${USER_NAME}
