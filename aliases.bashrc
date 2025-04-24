@@ -2,8 +2,6 @@ export $(cat .env | xargs)
 
 dev_update() {
     (
-        cd "$PROJECT_LOCAL_FOLDER" || { echo "❌ Failed to cd into $PROJECT_LOCAL_FOLDER"; return 1; }
-
         echo "📦 Building project with yarn..."
         docker compose exec web-server bash -c "
                 cd /var/www/html/web/app/themes/${PROJECT_THEME_NAME} &&
@@ -12,7 +10,7 @@ dev_update() {
             " || { echo "❌ Yarn build failed"; return 1; }
 
         echo "📤 Uploading 'public' folder via SCP..."
-        scp -r -P 222 public "$CONNECT_DEV_SERVER_SSH:/usr/home/$CONNECT_DEV_SERVER_SSH_USER/public_html/$CONNECT_DEV_DOMAIN/web/app/themes/$CONNECT_THEME_NAME" || {
+        scp -r -P 222 $PROJECT_LOCAL_FOLDER/www/web/app/themes/$PROJECT_THEME_NAME/public "$CONNECT_DEV_SERVER_SSH:/usr/home/$CONNECT_DEV_SERVER_SSH_USER/public_html/$CONNECT_DEV_DOMAIN/web/app/themes/$PROJECT_THEME_NAME" || {
             echo "❌ SCP upload failed"; return 1;
         }
 
@@ -29,7 +27,18 @@ dev_update() {
     )
 }
 
-update_project() {
+# Copy database and media files from the test server
+dev_pull() {
+    (
+        ssh $CONNECT_DEV_SERVER_SSH -p222 "mysqldump $REMOTE_DB_NAME -u $REMOTE_DB_USER --password=$REMOTE_DB_PASSWORD" > misc/dump.sql &&
+             sed -i "s/https:\/\/vdfa\.xen1\.de/http:\/\/vdfa\.test/g" misc/dump.sql &&
+             cat misc/dump.sql | docker compose exec -T db /usr/bin/mariadb -u root --password=root root &&
+             scp -r -P 222 $CONNECT_DEV_SERVER_SSH:/usr/home/$CONNECT_DEV_SERVER_SSH_USER/public_html/$CONNECT_DEV_DOMAIN/web/app/uploads $PROJECT_LOCAL_FOLDER/www/web/app/
+    )
+}
+
+# Update dependencies in root and the theme directories
+project_update() {
     (
         docker compose up -d --build &&
         docker compose exec web-server bash -c "
@@ -41,7 +50,7 @@ update_project() {
     )
 }
 
-build_project() {
+project_build() {
     (
         docker compose up -d --build &&
         docker compose exec web-server bash -c "
@@ -55,7 +64,7 @@ build_project() {
     )
 }
 
-dev_project() {
+project_up() {
     (
         docker compose up -d &&
         docker compose exec web-server bash -c "
