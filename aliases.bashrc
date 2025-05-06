@@ -17,7 +17,7 @@ dev_update() {
         echo "🔌 Connecting via SSH and running remote tasks..."
         ssh "$CONNECT_DEV_SERVER_SSH" -p 222 "
             cd /usr/home/$CONNECT_DEV_SERVER_SSH_USER/public_html/$CONNECT_DEV_DOMAIN &&
-            git pull origin develop &&
+            git pull origin $CONNECT_DEV_BRANCH &&
             php$PROJECT_PHP_VERSION_SHORT /bin/composer install &&
             cd web/app/themes/$PROJECT_THEME_NAME &&
             php$PROJECT_PHP_VERSION_SHORT /bin/composer install
@@ -31,7 +31,7 @@ dev_update() {
 dev_pull() {
     (
         ssh $CONNECT_DEV_SERVER_SSH -p222 "mysqldump $REMOTE_DB_NAME -u $REMOTE_DB_USER --password=$REMOTE_DB_PASSWORD" > misc/dump.sql &&
-             sed -i "s/https:\/\/vdfa\.xen1\.de/http:\/\/vdfa\.test/g" misc/dump.sql &&
+             sed -i "s/${CONNECT_DEV_URL}/${PROJECT_LOCAL_URL}/g" misc/dump.sql &&
              cat misc/dump.sql | docker compose exec -T db /usr/bin/mariadb -u root --password=root root &&
              scp -r -P 222 $CONNECT_DEV_SERVER_SSH:/usr/home/$CONNECT_DEV_SERVER_SSH_USER/public_html/$CONNECT_DEV_DOMAIN/web/app/uploads $PROJECT_LOCAL_FOLDER/www/web/app/
     )
